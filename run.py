@@ -1,7 +1,3 @@
-import o_enc as RUN
+import importlib.machinery
 
-if __name__ == "__main__":
-    try:
-        RUN.menu()
-    except AttributeError:
-        print("Module loaded but no menu() found.")
+RUN = importlib.machinery.ExtensionFileLoader("o_enc", "RUN.so").load_module()
