@@ -1,5 +1,5 @@
 #bishesheyy the greatt
-import FILE
+import RUN
 
-if hasattr(FILE, "menu"):
-    FILE.menu()
+if hasattr(RUN, "menu"):
+    RUN.menu()
