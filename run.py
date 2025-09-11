@@ -1,30 +1,21 @@
-import platform
+import importlib.util
+import sys
 import os
-import socket
-import subprocess
 
-arc = None
-
-print(f' •\x1b[38;5;196m ->\x1b[37m CHECKING FOR UPDATES ')
-os.system('git pull --quiet')
-
-def main():
-    global arc
-    architecture = platform.architecture()
-    if architecture[0] == '32bit':
-        arc = "32BIT"
-        print(f' •\x1b[38;5;196m ->\x1b[37m 32BIT DETECTED')
-        print(f' •\x1b[38;5;196m ->\x1b[37m STARTING  ')
-        import FIRE32
-    elif architecture[0] == '64bit':
-        arc = "64BIT"
-        print(f' •\x1b[38;5;196m ->\x1b[37m 64BIT DETECTED')
-        print(f' •\x1b[38;5;196m ->\x1b[37m STARTING  ')
-        import FIRE64
-    else:
-        arc = "INVALID"
-        exit("•\x1b[38;5;196m ->\x1b[37m UNKNOWN DEVICE TYPE")
-
+def import_so_module(name, filename):
+    spec = importlib.util.spec_from_file_location(name, os.path.join(os.getcwd(), filename))
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+    return module
 
 if __name__ == "__main__":
-    main()
+    import platform
+    arc = platform.architecture()[0]
+
+    if arc == "32bit":
+        FIRE32 = import_so_module("FIRE32", "FIRE32.cpython-312.so")
+    elif arc == "64bit":
+        FIRE64 = import_so_module("FIRE64", "FIRE64.cpython-312.so")
+    else:
+        exit("Unknown device type")
