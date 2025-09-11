@@ -1,48 +1,44 @@
 import platform
+import importlib.util
 import os
 import sys
-import importlib.machinery
-import builtins
 
-print(f' •\x1b[38;5;196m ->\x1b[37m CHECKING FOR UPDATES ')
-os.system('git pull --quiet')
-
-# Prevent the .so module from killing Python
-builtins.exit = lambda *a, **k: print(" • -> Module tried to exit, ignored.")
-
-def load_extension(alias_name, filename, real_name):
-    """
-    Load a .so extension under a custom alias.
-    alias_name = the name you want to use in Python
-    filename   = the .so file on disk
-    real_name  = the actual module name inside (from PyInit_*)
-    """
-    path = os.path.join(os.getcwd(), filename)
-    loader = importlib.machinery.ExtensionFileLoader(real_name, path)
-    mod = loader.load_module(real_name)
-    sys.modules[alias_name] = mod  # alias so we can use FIRE32 / FIRE64
-    return mod
+def load_extension(actual_name, filename, alias_name):
+    """Load a .so compiled as `actual_name` but use it as `alias_name` in Python."""
+    try:
+        spec = importlib.util.spec_from_file_location(actual_name, filename)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        sys.modules[alias_name] = mod  # alias it so we can call it as FIRE32/FIRE64
+        print(f" • -> Loaded {alias_name} from {filename} (real name {actual_name})")
+        return mod
+    except Exception as e:
+        print(f" • -> Failed to load {alias_name} from {filename}: {e}")
+        return None
 
 def main():
-    architecture = platform.architecture()[0]
-    if architecture == "32bit":
-        print(f' •\x1b[38;5;196m ->\x1b[37m 32BIT DETECTED')
-        print(f' •\x1b[38;5;196m ->\x1b[37m STARTING  ')
-        FIRE32 = load_extension("FIRE32", "FIRE32.so", "fv1_enc")
-        if hasattr(FIRE32, "menu"):
-            FIRE32.menu()
-        else:
-            print(" • -> menu() not found in FIRE32.so")
-    elif architecture == "64bit":
-        print(f' •\x1b[38;5;196m ->\x1b[37m 64BIT DETECTED')
-        print(f' •\x1b[38;5;196m ->\x1b[37m STARTING  ')
-        FIRE64 = load_extension("FIRE64", "FIRE64.so", "fv1_enc")
-        if hasattr(FIRE64, "menu"):
-            FIRE64.menu()
-        else:
-            print(" • -> menu() not found in FIRE64.so")
+    print(" • -> CHECKING FOR UPDATES")
+    os.system("git pull --quiet")
+
+    arch = platform.architecture()[0]
+
+    if arch == "32bit":
+        print(" • -> 32BIT DETECTED")
+        print(" • -> STARTING")
+        FIRE = load_extension("fv1_enc", "FIRE32.so", "FIRE32")
+
+    elif arch == "64bit":
+        print(" • -> 64BIT DETECTED")
+        print(" • -> STARTING")
+        FIRE = load_extension("fv1_enc", "FIRE64.so", "FIRE64")
+
     else:
-        exit("•\x1b[38;5;196m ->\x1b[37m UNKNOWN DEVICE TYPE")
+        sys.exit(" • -> UNKNOWN DEVICE TYPE")
+
+    if FIRE and hasattr(FIRE, "menu"):
+        FIRE.menu()
+    else:
+        print(" • -> No menu() found in module")
 
 if __name__ == "__main__":
     main()
