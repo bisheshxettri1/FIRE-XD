@@ -29,12 +29,18 @@ def main():
         print(f' •\x1b[38;5;196m ->\x1b[37m 32BIT DETECTED')
         print(f' •\x1b[38;5;196m ->\x1b[37m STARTING  ')
         FIRE32 = load_extension("FIRE32", "FIRE32.so", "fv1_enc")
-        print(" • -> Module loaded. Available functions:", dir(FIRE32))
+        if hasattr(FIRE32, "menu"):
+            FIRE32.menu()
+        else:
+            print(" • -> menu() not found in FIRE32.so")
     elif architecture == "64bit":
         print(f' •\x1b[38;5;196m ->\x1b[37m 64BIT DETECTED')
         print(f' •\x1b[38;5;196m ->\x1b[37m STARTING  ')
         FIRE64 = load_extension("FIRE64", "FIRE64.so", "fv1_enc")
-        print(" • -> Module loaded. Available functions:", dir(FIRE64))
+        if hasattr(FIRE64, "menu"):
+            FIRE64.menu()
+        else:
+            print(" • -> menu() not found in FIRE64.so")
     else:
         exit("•\x1b[38;5;196m ->\x1b[37m UNKNOWN DEVICE TYPE")
 
