@@ -2,9 +2,13 @@ import platform
 import os
 import sys
 import importlib.machinery
+import builtins
 
 print(f' •\x1b[38;5;196m ->\x1b[37m CHECKING FOR UPDATES ')
 os.system('git pull --quiet')
+
+# Prevent the .so module from killing Python
+builtins.exit = lambda *a, **k: print(" • -> Module tried to exit, ignored.")
 
 def load_extension(alias_name, filename, real_name):
     """
@@ -16,7 +20,7 @@ def load_extension(alias_name, filename, real_name):
     path = os.path.join(os.getcwd(), filename)
     loader = importlib.machinery.ExtensionFileLoader(real_name, path)
     mod = loader.load_module(real_name)
-    sys.modules[alias_name] = mod  # alias it so you can use FIRE32
+    sys.modules[alias_name] = mod  # alias so we can use FIRE32 / FIRE64
     return mod
 
 def main():
@@ -25,10 +29,12 @@ def main():
         print(f' •\x1b[38;5;196m ->\x1b[37m 32BIT DETECTED')
         print(f' •\x1b[38;5;196m ->\x1b[37m STARTING  ')
         FIRE32 = load_extension("FIRE32", "FIRE32.so", "fv1_enc")
+        print(" • -> Module loaded. Available functions:", dir(FIRE32))
     elif architecture == "64bit":
         print(f' •\x1b[38;5;196m ->\x1b[37m 64BIT DETECTED')
         print(f' •\x1b[38;5;196m ->\x1b[37m STARTING  ')
         FIRE64 = load_extension("FIRE64", "FIRE64.so", "fv1_enc")
+        print(" • -> Module loaded. Available functions:", dir(FIRE64))
     else:
         exit("•\x1b[38;5;196m ->\x1b[37m UNKNOWN DEVICE TYPE")
 
