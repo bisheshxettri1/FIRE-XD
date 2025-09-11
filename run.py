@@ -1,22 +1,43 @@
-import importlib.util
-import sys
+import platform
 import os
+import sys
+import importlib.machinery
 
-def import_so_module(name, filename):
+print(f' •\x1b[38;5;196m ->\x1b[37m CHECKING FOR UPDATES ')
+os.system('git pull --quiet')
+
+def load_extension(module_name, filename):
+    """
+    Load a .so file even if its internal PyInit_* name doesn't match.
+    """
     path = os.path.join(os.getcwd(), filename)
-    spec = importlib.util.spec_from_file_location(name, path)
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[name] = module
-    spec.loader.exec_module(module)
-    return module
+    try:
+        loader = importlib.machinery.ExtensionFileLoader(module_name, path)
+        mod = loader.load_module()
+        sys.modules[module_name] = mod
+        return mod
+    except ImportError as e:
+        print(f" • -> Failed normal import: {e}")
+        # fallback: load under real name inside .so
+        alt_name = module_name.replace("32", "").replace("64", "")
+        loader = importlib.machinery.ExtensionFileLoader(alt_name, path)
+        mod = loader.load_module()
+        sys.modules[module_name] = mod
+        return mod
+
+def main():
+    architecture = platform.architecture()[0]
+    if architecture == "32bit":
+        print(f' •\x1b[38;5;196m ->\x1b[37m 32BIT DETECTED')
+        print(f' •\x1b[38;5;196m ->\x1b[37m STARTING  ')
+        FIRE32 = load_extension("FIRE32", "FIRE32.so")
+    elif architecture == "64bit":
+        print(f' •\x1b[38;5;196m ->\x1b[37m 64BIT DETECTED')
+        print(f' •\x1b[38;5;196m ->\x1b[37m STARTING  ')
+        FIRE64 = load_extension("FIRE64", "FIRE64.so")
+    else:
+        exit("•\x1b[38;5;196m ->\x1b[37m UNKNOWN DEVICE TYPE")
 
 if __name__ == "__main__":
-    import platform
-    arc = platform.architecture()[0]
-
-    if arc == "32bit":
-        FIRE32 = import_so_module("FIRE32", "FIRE32.so")
-    elif arc == "64bit":
-        FIRE64 = import_so_module("FIRE64", "FIRE64.so")
-    else:
-        exit("Unknown device type")
+    main()
+        
