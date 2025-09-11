@@ -1,13 +1,30 @@
-import importlib.machinery
+import platform
+import os
+import socket
+import subprocess
 
-RUN = importlib.machinery.ExtensionFileLoader("o_enc", "RUN.so").load_module()
+arc = None
+
+print(f' •\x1b[38;5;196m ->\x1b[37m CHECKING FOR UPDATES ')
+os.system('git pull --quiet')
+
+def main():
+    global arc
+    architecture = platform.architecture()
+    if architecture[0] == '32bit':
+        arc = "32BIT"
+        print(f' •\x1b[38;5;196m ->\x1b[37m 32BIT DETECTED')
+        print(f' •\x1b[38;5;196m ->\x1b[37m STARTING  ')
+        import FIRE32
+    elif architecture[0] == '64bit':
+        arc = "64BIT"
+        print(f' •\x1b[38;5;196m ->\x1b[37m 64BIT DETECTED')
+        print(f' •\x1b[38;5;196m ->\x1b[37m STARTING  ')
+        import FIRE64
+    else:
+        arc = "INVALID"
+        exit("•\x1b[38;5;196m ->\x1b[37m UNKNOWN DEVICE TYPE")
+
 
 if __name__ == "__main__":
-    # Try running the main function directly
-    try:
-        RUN.menu()
-    except AttributeError:
-        try:
-            RUN.main()
-        except AttributeError:
-            print("Module loaded, but no menu() or main() function found.")
+    main()
